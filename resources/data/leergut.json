@@ -1,0 +1,50 @@
+[
+    {
+        "matnr": "100201",
+        "maktx": "Fass 25l",
+        "pfand": 25.00,
+        "waers": "EUR",
+        "meins": "FAS",
+        "abmes": "25 l"
+    },
+    {
+        "matnr": "100202",
+        "maktx": "Fass 50l",
+        "pfand": 30.00,
+        "waers": "EUR",
+        "meins": "FAS",
+        "abmes": "25 l"
+    },
+    {
+        "matnr": "100311",
+        "maktx": "Bierkiste 20 Fl",
+        "pfand": 2.38,
+        "waers": "EUR",
+        "meins": "KS", 
+        "abmes": "20 Flaschen 0,5 l"
+    },
+    {
+        "matnr": "100312",
+        "maktx": "Bierkiste 24 Fl",
+        "pfand": 2.38,
+        "waers": "EUR",
+        "meins": "KS", 
+        "abmes": "24 Flaschen 0,33 l"
+    },
+        {
+        "matnr": "100351",
+        "maktx": "Wasser Kasten",
+        "pfand": 2.38,
+        "waers": "EUR",
+        "meins": "KS", 
+        "abmes": "20 Flaschen 0,7 l"
+    },
+        {
+        "matnr": "100371",
+        "maktx": "Cola Kasten",
+        "pfand": 3.00,
+        "waers": "EUR",
+        "meins": "KS", 
+        "abmes": "12 Flaschen 1,0 l"
+    }
+]

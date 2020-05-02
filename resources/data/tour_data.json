@@ -1,0 +1,233 @@
+    { 
+      "routno":   "120034",
+      "drivno":   "1", 
+      "descr":    "Tour Sachsenhausen", 
+      "driver":   "1001",
+      "driver2":  "1011",
+      "tourStat": "",
+      "creation": "2020-04-23T18:25:43.511Z",
+      "delivery": [
+        { 
+            "dlvno":    "2100001345",
+            "sequ":     1,
+            "delvStat": "",
+            "name1":    "Zum grünen Kranz", 
+            "name2":    "Gastwirtschaft", 
+            "ort01":    "Frankfurt", 
+            "pstlz":    "60598",
+            "stras":    "Schwarzsteinkautweg",
+            "hausn":    "17",
+            "land1":    "",
+            "phone":    "069 / 63 51 xx", 
+            "email":    "gruener_kranz@t-online.de",
+            "hinweis":  "Nicht vor 12:00 Uhr",
+            "barkz":    false, 
+            "betrag":   252.00, 
+            "pfand":    30.00, 
+            "zuschl":   10.00, 
+            "total":    292.00, 
+            "mwst":     0.19, 
+            "difference":  0.00, 
+            "payment":  0.00,
+            "waers":    "EUR",
+            "signDriver":   false,
+            "signCustomer": false,
+            "item":   [
+                {
+                    "posnr":  "000010", 
+                    "matnr":  "7731",
+                    "maktx":  "Pils herb 0,5 l", 
+                    "abmes":  "1 PL = 42 Kisten",
+                    "menge":  126.0, 
+                    "meins":  "KS", 
+                    "decim":  0,
+                    "lfimg":  3.0,
+                    "vrkme":  "PL",
+                    "vdeci":  0,
+                    "completed": false,
+                    "damaged":   false,
+                    "shortage":  false,
+                    "fmeng":  0.0,
+                    "fmein":  "PL",
+                    "bmeng":  0.0,
+                    "bmein":  "PL",
+                    "images": 0,
+                    "imgmax": 0,
+                    "fdeci":  0,
+                    "bdeci":  0,
+                    "mixed": false, 
+                    "units":  [
+                        {
+                         "meins": "KS", 
+                         "bezei": "Kiste",
+                         "umrez": 1.0,
+                         "umren": 1.0,
+                         "decim": 0
+                        }, 
+                        {
+                         "meins": "PL", 
+                         "bezei": "Palette",
+                         "umrez": 42.0,
+                         "umren": 1.0,
+                         "decim": 0
+                        }, 
+                        {
+                         "meins": "FL", 
+                         "bezei": "Flasche",
+                         "umrez": 1.0,
+                         "umren": 20.0,
+                         "decim": 0
+                        }
+                    ]
+                },
+                {
+                    "posnr":  "000013", 
+                    "matnr":  "7731",
+                    "maktx":  "Weizen 0,5 l", 
+                    "abmes":  "1 PL = 42 Kisten",
+                    "menge":  84.0, 
+                    "meins":  "KS",
+                    "decim":  0,
+                    "lfimg":  2.0,
+                    "vrkme":  "PL",
+                    "vdeci":  0,
+                    "completed": false,
+                    "damaged":   false,
+                    "shortage":  false,
+                    "fmeng":  0.0,
+                    "fmein":  "PL",
+                    "bmeng":  0.0,
+                    "bmein":  "PL",
+                    "images": 0,
+                    "imgmax": 0,
+                    "fdeci":  0,
+                    "bdeci":  0, 
+                    "mixed":  false,
+                    "units":  [
+                        {
+                         "meins": "KS", 
+                         "bezei": "Kiste",
+                         "umrez": 1.0,
+                         "umren": 1.0,
+                         "decim": 0
+                        }, 
+                        {
+                         "meins": "PL", 
+                         "bezei": "Palette",
+                         "umrez": 42.0,
+                         "umren": 1.0,
+                         "decim": 0
+                        },
+                        {
+                        "meins": "FL", 
+                        "bezei": "Flasche",
+                        "umrez": 1.0,
+                        "umren": 20.0,
+                        "decim": 0
+                        }
+                    ]
+                }
+            ]
+        }, 
+        { 
+            "dlvno":    "2100001348",
+            "sequ":     2,
+            "delvStat": " ",
+            "name1":    "Zum roten Ochsen", 
+            "name2":    "Restaurant", 
+            "ort01":    "Frankfurt", 
+            "pstlz":    "60594",
+            "stras":    "Große Rittergasse",
+            "hausn":    "30",
+            "land1":    "",
+            "phone":    "069 / 61 80 xx", 
+            "email":    "",
+            "hinweis":  "",
+            "barkz":    true, 
+            "betrag":   252.00, 
+            "pfand":    30.00, 
+            "zuschl":   10.00, 
+            "total":    292.00, 
+            "mwst":     0.19, 
+            "difference":  0.00, 
+            "payment":  0.00,
+            "waers":    "EUR",
+            "signDriver":   false,
+            "signCustomer": false,
+            "item":   [
+                {
+                    "posnr":  "000010", 
+                    "matnr":  "7751",
+                    "maktx":  "Pils 50 l Fass", 
+                    "abmes": "50 l Fass",
+                    "menge":  2.0, 
+                    "meins":  "Fass",
+                    "decim":  0,
+                    "lfimg":  2.0,
+                    "vrkme":  "Fass",
+                    "vdeci":  0,
+                    "completed": false,
+                    "damaged":   false,
+                    "shortage":  false,
+                    "fmeng":  0.0,
+                    "fmein":  "Fass",
+                    "bmeng":  0.0,
+                    "bmein":  "Fass",
+                    "images": 0,
+                    "imgmax": 0,
+                    "fdeci":  0,
+                    "bdeci":  0,
+                    "mixed":  false
+                },
+                {
+                    "posnr":  "000013", 
+                    "matnr":  "7731",
+                    "maktx":  "Weizen 0,5 l", 
+                    "abmes":  "1 Pl = 42 Kisten a 20 Fl.",
+                    "menge":  294.0, 
+                    "meins":  "KS",
+                    "decim":  0,
+                    "lfimg":  7.0,
+                    "vrkme":  "PL",
+                    "vdeci":  0,
+                    "completed": false,
+                    "damaged":   false,
+                    "shortage":  false,
+                    "fmeng":  0.0,
+                    "fmein":  "PL",
+                    "bmeng":  0.0,
+                    "bmein":  "PL",
+                    "images": 0,
+                    "imgmax": 0,
+                    "fdeci":  0,
+                    "bdeci":  0, 
+                    "mixed":  false,
+                    "units":  [
+                        {
+                         "meins": "KS", 
+                         "bezei": "Kiste",
+                         "umrez": 1.0,
+                         "umren": 1.0,
+                         "decim": 0
+                        }, 
+                        {
+                         "meins": "PL", 
+                         "bezei": "Palette",
+                         "umrez": 42.0,
+                         "umren": 1.0,
+                         "decim": 0
+                        },
+                        {
+                        "meins": "FL", 
+                        "bezei": "Flasche",
+                        "umrez": 1.0,
+                        "umren": 20.0,
+                        "decim": 0
+                       }
+                    ]
+                }
+            ]
+        } 
+      ]
+    }
+  

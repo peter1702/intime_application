@@ -1,0 +1,51 @@
+[
+    {
+        "page": "1",
+        "title":"Wareneingang",
+        "mtype": "",
+        "icon": "add_box",
+        "action": "WEIN"
+    },
+    {
+        "page": "1",
+        "title":"Einlagerung",
+        "mtype": "",
+        "icon": "input",
+        "action": "EINL"
+    },
+    {
+        "page": "1",
+        "title":"Kommissionierung",
+        "mtype": "",
+        "icon": "add_shopping_cart",
+        "action": "KOMM"
+    }, 
+    {
+        "page": "1",
+        "title":"Verpacken",
+        "mtype": "",
+        "icon": "move_to_inbox",
+        "action": "PACK"
+    },
+    {
+        "page": "1",
+        "title":"Verladen",
+        "mtype": "",
+        "icon": "local_shipping",
+        "action": "LADEN"
+    },
+    {
+        "page": "1",
+        "title":"Lagerbestand",
+        "mtype": "",
+        "icon": "view_module",
+        "action": "STOCK"
+    },
+    {
+        "page": "2",
+        "title":"Sonstiges",
+        "mtype": "",
+        "icon": "build",
+        "action": "SONST"
+    } 
+]

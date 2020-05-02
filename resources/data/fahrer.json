@@ -1,0 +1,26 @@
+[
+    {
+        "nummer": "1001",
+        "name":   "Klaus Müller"
+    },
+    {
+        "nummer": "1005",
+        "name":   "Klaus Fischer"
+    },
+    {
+        "nummer": "1011",
+        "name":   "Hermann Meyer"
+    },
+    {
+        "nummer": "1023",
+        "name":   "Fritz Schmitt"
+    },
+    {
+        "nummer": "1033",
+        "name":   "Lothar Schulz"
+    },
+    {
+        "nummer": "1034",
+        "name":   "Gerhard Bauer"
+    }
+]

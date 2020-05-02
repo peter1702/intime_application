@@ -1,0 +1,100 @@
+[
+  { 
+    "matnr": "600-100", 
+    "maktx": "Nagel", 
+    "meins": "ST",
+    "xchar": true,
+    "datum": "2020-04-23T18:25:43.511Z",
+    "stock": [
+      {
+        "matnr": "600-100", 
+        "werks": "0001", 
+        "lgort": "0001", 
+        "charg": "1200000023", 
+        "menge": 2132.0, 
+        "meins": "ST",
+        "vfdat": "2020-04-23T18:25:43.511Z"
+      }, 
+      {
+        "matnr": "600-100", 
+        "werks": "0001", 
+        "lgort": "0001", 
+        "charg": "1200000025", 
+        "menge": 8662.0, 
+        "meins": "ST",
+        "vfdat": "2020-04-23T18:25:43.511Z"
+      }, 
+      {
+        "matnr": "600-100", 
+        "werks": "0001", 
+        "lgort": "0002", 
+        "charg": "1200000131", 
+        "menge": 10292.0, 
+        "meins": "ST",
+        "vfdat": "2020-04-23T18:25:43.511Z"
+      },
+      {
+        "matnr": "600-100", 
+        "werks": "0001", 
+        "lgort": "0002", 
+        "charg": "1200000131", 
+        "menge": 15679.0, 
+        "meins": "ST",
+        "vfdat": "2020-04-23T18:25:43.511Z"
+      },
+      {
+        "matnr": "600-100", 
+        "werks": "0001", 
+        "lgort": "0002", 
+        "charg": "1200000131", 
+        "menge": 985.0, 
+        "meins": "ST",
+        "vfdat": "2020-04-23T18:25:43.511Z"
+      },
+      {
+        "matnr": "600-100", 
+        "werks": "0001", 
+        "lgort": "0003", 
+        "charg": "1200000456", 
+        "menge": 7890.0, 
+        "meins": "ST",
+        "vfdat": "2020-04-23T18:25:43.511Z"
+      }
+    ],
+    "units":  [
+       {
+        "meins": "ST", 
+        "bezei": "Stück",
+        "umrez": 1.0,
+        "umren": 1.0,
+        "decim": 0
+       }, 
+       {
+        "meins": "KG", 
+        "bezei": "Kilogramm",
+        "umrez": 8.0,
+        "umren": 1.0,
+        "decim": 3
+       }, 
+       {
+        "meins": "G", 
+        "bezei": "Gramm",
+        "umrez": 8000.0,
+        "umren": 1.0,
+        "decim": 3
+       }
+    ],
+    "bapiret": [
+       {
+        "id": "M1",
+        "type": "S",
+        "number": "102",
+        "message": "Alles in Ordnung",
+        "message_v1": "",
+        "message_v2": "",
+        "message_v3": "",
+        "message_v4": ""
+       }
+    ]
+  }
+]
