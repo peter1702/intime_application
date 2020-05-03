@@ -1,7 +1,6 @@
 library delivery_service.globals;
 
 import 'package:flutter/material.dart';
-import 'dart:async';
 
 // global data
 bool isLoggedIn = false;

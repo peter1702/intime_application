@@ -17,12 +17,8 @@ class Helpers {
   /*---------------------------------------------------------------------------------*/
   static String double2String(double input, {int decim = 3}) {
     String output;
-    String separator = ',';
-    String decimalpt = '.';
     NumberFormat f;
     if (globals.decimSep == "Komma" || globals.decimSep == "123.456,789") {
-      separator = '.';
-      decimalpt = ',';
       f = new NumberFormat.currency(
           locale: "eu", symbol: "", decimalDigits: decim);
     } else {
@@ -32,15 +28,6 @@ class Helpers {
     output = f.format(input).trim();
     return output;
 
-    //String output = input.toString();
-    output = input.toStringAsFixed(decim);
-    if (globals.decimSep == "Komma" || globals.decimSep == "123.456,789") {
-      output = output.replaceAll(".", "#");
-      output = output.replaceAll(",", ".");
-      output = output.replaceAll("#", ",");
-    }
-    //print(">> double2String: input: "+input.toString()+" >> output: "+output);
-    return output;
   }
 
   /*---------------------------------------------------------------------------------*/
