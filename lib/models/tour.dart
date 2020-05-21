@@ -16,6 +16,7 @@ import '../models/files.dart';
 // Class Tour                                                                     */
 /* ****************************************************************************** */
 class Tour {
+
   String routno; // Tour-Nummer
   String drivno; // Fahrt
   String descr; // Beschreibung
@@ -72,12 +73,26 @@ class Tour {
       this.eventList,
     });
 
+  // ------------------------------------------------------------------------------- //
+  // Tourdaten aus den JSON Daten aufbauen
+  // ------------------------------------------------------------------------------- //
   factory Tour.fromJson(Map<String, dynamic> json) {
+
     List<Delivery> delvList = new List<Delivery>();
     List<Events> eventList = new List<Events>();
+
     int cntOpen = 0;
     int cntClosed = 0;
     int cntDelv = 0;
+
+    if ( json['routno'] == null ) {
+      Tour tourFehl = new Tour();
+      tourFehl.routno = '';
+      tourFehl.drivno = '';
+      tourFehl.returnCode = 1;
+      tourFehl.returnMssg = 'no data received';
+      return tourFehl;
+    }
 
     try {
       json["delivery"].forEach((i) {
@@ -100,6 +115,7 @@ class Tour {
     } catch (e) {
       //print("found no events");
     }
+
 
     return new Tour(
       routno: json['routno'] as String,
@@ -125,7 +141,9 @@ class Tour {
       eventList: eventList
     );
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Tourdaten in das JSON Format serialisieren 
+  // ------------------------------------------------------------------------------- //
   String toJson(Tour tourData,{bool delta:false, String dlvno, bool head:false}) {
     
     var mapData = new Map<String, dynamic>();
@@ -148,15 +166,16 @@ class Tour {
     mapData["startkm"] = tourData.startKM;
     mapData["endekm"] = tourData.endeKM;
 
-    if (delta == false) {
+    if ( delta == false ) {
       mapData["descr"] = tourData.descr;
       mapData["opendelv"] = tourData.openDelv;
       mapData["countdelv"] = tourData.countDelv;
       mapData["returncode"] = tourData.returnCode;
       mapData["returnMssg"] = tourData.returnMssg;
     }
+    
     // Only Header?
-    if (head == false) {
+    if ( head == false ) {
       // add deliveries
       Delivery delvObj = new Delivery();
       List<Map<String, dynamic>> delvMap =
@@ -165,17 +184,17 @@ class Tour {
       if(delvMap.length > 0) {
         mapData["delivery"] = delvMap;
       }
+    }
       
-      // add events
-      List<Map<String, dynamic>> eventMap = [];
-      for (Events evt in tourData.eventList) {
-        if (delta == false || evt.changeKz != '' ) {
-          eventMap.add(evt.toJson());
-        }
+    // Add events
+    List<Map<String, dynamic>> eventMap = [];
+    for (Events evt in tourData.eventList) {
+      if ( delta == false || evt.changeKz != '' ) {
+        eventMap.add(evt.toJson());
       }
-      if(eventMap.length > 0) {
-        mapData["event"] = eventMap; 
-      }
+    }
+    if(eventMap.length > 0) {
+      mapData["event"] = eventMap; 
     }
 
     // Encode JSON
@@ -183,10 +202,23 @@ class Tour {
     return json;
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Ermitteln der aktuellen Tourdaten vom Backend oder von der Sicherung. 
+  // Vom Backend werden die Daten nur gelesen, wenn der Parameter "Force" gesetzt 
+  // wurde. Dies ist der Fall, wenn die Daten manuell neu angefordert werden. 
+  // Steht noch eine Synchronisierung App -> SAP an ("to be synchronized"), 
+  // werden die Daten nicht geladen!
+  // Können die Daten nicht vom SAP geladen werden, werden sie aus der 
+  // Sicherung (File) gelesen. 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> getCurrentTour(String routno, String drivno, {bool force:false}) async {
     
     if (globals.toBeSynchronized == null) {
       globals.toBeSynchronized = false;
+    }
+    if (routno == null) {
+      routno = '';
+      drivno = '';
     }
     print("getCurrentTour - to be synchronized: "+globals.toBeSynchronized.toString());
 
@@ -194,21 +226,29 @@ class Tour {
 
     if (globals.demoModus == true) {
       tourData = await readFromFile(routno, drivno);
-      print("readFromFile: "+tourData.routno);
+      print("readFromFile: "+routno);
     } else {
       //get JSON data via HTTP from SAP - if not available get data from file
       if (force && globals.toBeSynchronized == false) {
+
         tourData = await _requestFromSAP(routno, drivno);
         globals.lastReturnCode = tourData.returnCode;
         globals.lastReturnMssg = tourData.returnMssg;
+
         if (tourData.returnCode != 0) {
           print("SAP not available - read data from file");
           tourData = await readFromFile(routno, drivno);
-          if (tourData.routno != routno || tourData.drivno != drivno) {
+          if (tourData.routno == null || tourData.routno != routno || tourData.drivno != drivno) {
             print("Data not available on file");
             tourData.routno = '';
             tourData.drivno = '';
           }
+        } else if (tourData.routno == null || tourData.routno == '') { 
+          globals.lastReturnMssg = tourData.returnMssg = 'no data received';
+          globals.lastReturnCode = tourData.returnCode = 1;
+          tourData.routno = '';
+          tourData.drivno = '';
+          print("keine Daten empfangen");
         } else {
           if (globals.lastSubTableLoad == null) {
             globals.lastSubTableLoad = DateTime(1900);
@@ -220,25 +260,29 @@ class Tour {
             StandardLeergut.getFromBackend();
             globals.lastSubTableLoad = today;
           }
-        } 
+        }
+
       } else {
         tourData = await readFromFile(routno, drivno);
         print("readFromFile: "+tourData.routno);
-        if (tourData.routno != routno || tourData.drivno != drivno) {
+        if (tourData.routno == null || tourData.routno != routno || tourData.drivno != drivno) {
           tourData.routno = '';
           tourData.drivno = '';
         }
       }
 
       // es sind noch Daten an SAP zu übertragen 
-      if(globals.toBeSynchronized == true) {
+      if(globals.toBeSynchronized == true && tourData.routno != '') {
         syncTour(tourData);
       }
     }
     // return Data
     return tourData;
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Nächste Tour vom Backend ermitteln lassen
+  // Dies ist nur dann möglich, wenn die vorherige Tour abgeschlossen wurde
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> getNextTour(String user) async {
     print("getNextTour - start");
 
@@ -309,7 +353,9 @@ class Tour {
     // return Data
     return tourData;
   }
-  
+  // ------------------------------------------------------------------------------- //
+  // Initialisieren der Daten nach dem Aufbau aus dem JSON-String 
+  // ------------------------------------------------------------------------------- //
   static _initializeData(Tour tourData) {
 
     if (tourData.routno == null) {
@@ -355,10 +401,25 @@ class Tour {
       default: globals.waers = globals.waers;
     }
   }
-
-  static _saveTour(Tour tourData, {String event:'',String reason:'',String dlvno:'',bool head:false,bool sync:false}) async {
+  // ------------------------------------------------------------------------------- //
+  // Sichern der Tourdaten auf dem Backend und Sicherung als File. 
+  // Nach erfolgreicher Übertragung an SAP, werden die Änderungsflags zurückgesetzt.
+  // Scheitert die Übertragung, wird das Flag "to be synchronized" gesetzt und 
+  // der Timer gestartet, der die Übertragung zyklisch im Background probiert.
+  // ------------------------------------------------------------------------------- //
+  static _saveTour(
+        Tour tourData, 
+        {
+        String event:'',
+        String reason:'',
+        String dlvno:'',
+        bool head:false,
+        bool sync:false
+        }
+        ) async {
 
     print("Save Tour - Begin") ;
+
     bool transmitFailed = false;
 
     if (tourData == null || tourData.routno == '') {
@@ -379,6 +440,7 @@ class Tour {
         transmitFailed = true;
       }
     } 
+
     if (globals.demoModus == true) {
       if (event != null && event != '') {
         await appendEvent(tourData, event, reason: reason, dlvno: dlvno);
@@ -386,6 +448,7 @@ class Tour {
       tourData.returnCode = 0;
       _resetChangeKz(tourData);
     }
+
     // Save current state in local file
     _saveToFile(tourData);
 
@@ -418,9 +481,13 @@ class Tour {
     }
 
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Starten des Timers für die Übertragung von Daten im Background 
+  // ------------------------------------------------------------------------------- //
   static void _startTimer(Tour tourData) async {
+
     print("startTimer - Timer is active: "+timerActive.toString());
+
     if(timerActive)
       return;
     timerStop = false;
@@ -448,11 +515,22 @@ class Tour {
     });
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Synchronisieren der Tourdaten (Übertragen nach SAP)
+  // Die Funktion kann manuell aufgerufen werden, wenn das Kennzeichen 
+  // "to be synchronized" gesetzt ist 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> syncTour(Tour tourData, {bool timer:false}) async {
     await _saveTour(tourData, sync:true);
     return tourData;
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Starten einer Tour.
+  // Vor dem Start bewirkt die Methode "get next tour" nur, dass eine Tour vom 
+  // Backend ermittelt wird und in der "Tourvorschau" angezeigt wird. Dies kann 
+  // solange wiederholt werden, bis die Tour gestartet wurde. 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> startTour(Tour tourData) async {
 
     String _oldRoutNo = globals.currentTourNo; 
@@ -485,7 +563,9 @@ class Tour {
     }
 
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Abschluss der Tour
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> finishTour(Tour tourData) async {
 
     print("Finish Tour - begin") ;
@@ -507,7 +587,10 @@ class Tour {
 
     print("Finish Tour - end") ;
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Zurücksetzen des Tour-Starts
+  // Das ist nur möglich, wenn noch keine Lieferung bearbeitet wurde
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> resetTour(Tour tourData) async {
 
     tourData.tourStat     = globals.tourStat_initial;
@@ -522,7 +605,9 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, event:globals.event_tour_reset, head:true);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Tour unterbrechen 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> breakTour(Tour tourData, String reason, {String delvno:''}) async {
 
     tourData.tourStat     = globals.tourStat_interrupted;
@@ -534,7 +619,9 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, event:globals.event_tour_break, reason:reason, dlvno:delvno, );
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Tour nach Unterbrechung fortsetzen 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> continueTour(Tour tourData, {String delvno:''}) async {
 
     tourData.tourStat     = globals.tourStat_started;
@@ -545,7 +632,9 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, event:globals.event_tour_continue, dlvno:delvno, head:true);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Starten der Entladung einer Lieferung 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> startDelivery(Tour tourData, int dlvIndex) async {  
 
     print("Start Delivery") ;
@@ -562,7 +651,9 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, event:globals.event_delv_start, dlvno: _dlvNo);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Abschluss einer Lieferung
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> finishDelivery(Tour tourData, int dlvIndex) async {  
 
     print("Finish Delivery") ;
@@ -579,7 +670,9 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, event: globals.event_delv_ende, dlvno: _dlvNo);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Sichern der Daten einer Lieferung auf dem Backend und als File
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> saveDelivery(Tour tourData, int dlvIndex) async {  
 
     print("Save Delivery") ; 
@@ -594,7 +687,9 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, dlvno: _dlvNo);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Zurücksetzen des Entladungs-Starts einer Lieferung 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> resetDelivery(Tour tourData, Delivery delivery) async {
 
     delivery.delvStat   = globals.delvStat_initial;
@@ -609,10 +704,15 @@ class Tour {
     _setPreferences();
     _saveTour(tourData, event: globals.event_delv_reset,dlvno:delivery.dlvno);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Merken wichtiger Tourdaten als preferences 
+  // ------------------------------------------------------------------------------- //
   static _setPreferences() async {
+
     SharedPreferences prefs;
+
     prefs = await SharedPreferences.getInstance();
+
     if (prefs != null) {
       prefs.setString('currentTourNo', globals.currentTourNo);
       prefs.setString('currentDrivNo', globals.currentDrivNo);
@@ -626,7 +726,11 @@ class Tour {
       prefs.setString('lastDateTime', globals.lastDateTime);
     }
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Tourdaten löschen 
+  // Das ist nur möglich für abgeschlossene Touren (erfolgt automatisch beim Starten
+  // der nächsten Tour) - oder für die Demo-Tour
+  // ------------------------------------------------------------------------------- //
   static deleteTour(String tourNo, String drivNo, {bool demo:false}) {
 
     if (tourNo == null) {
@@ -647,7 +751,9 @@ class Tour {
       reorgTour(tourNo, drivNo);
     }
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Alle Änderungskennzeichen nach erfolgreicher Übertragung an SAP löschen 
+  // ------------------------------------------------------------------------------- //
   static void _resetChangeKz(Tour tourData) {
     tourData.changeKz = '';
     tourData.delvList.forEach((delivery) {
@@ -669,30 +775,50 @@ class Tour {
     });
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Demo Tour laden 
+  // ------------------------------------------------------------------------------- //
   static Future<String> _loadAsset() async {
     print("load from asset");
     return await rootBundle.loadString("resources/data/tour_data.json");
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Filename für die Sicherung der Tour ermitteln 
+  // ------------------------------------------------------------------------------- //
   static String _getFileName(String tourNo, String drivNo) {
     return 'tour_'+tourNo+'_'+drivNo;
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Tourdaten auf dem mobilen Gerät als File sichern 
+  // ------------------------------------------------------------------------------- //
   static void _saveToFile(Tour tourData) async {
+
     String fileName = _getFileName(tourData.routno, tourData.drivno);
     String rawData  = tourData.toJson(tourData);
     print("Save To File Begin") ;
+
     int result = await Files.writeToFile(fileName, rawData);
     print("Save To File End") ;
+
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Tourdaten aus File lesen 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> readFromFile(String tourNo, String drivNo) async {
+
     String fileName = _getFileName(tourNo, drivNo);
     String rawData  = await Files.readFromFile(fileName);
     final Map newMap = jsonDecode(rawData);
     return Tour.fromJson(newMap);
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Reorganisieren der Tourdaten beim Löschen 
+  // insbesondere Bilder löschen 
+  // ------------------------------------------------------------------------------- //
   static reorgTour(String tourNo, String drivNo) async {
 
     print("Tour reorganisieren: "+tourNo);
@@ -724,8 +850,19 @@ class Tour {
     //print("Verzeichnis-Inhalt nachher....");
     //Files.directoryList();
   }
-
-  static Future<void> appendEvent(Tour tourData, String event, {String reason: '', String info:'', String dlvno: ''}) async {
+  // ------------------------------------------------------------------------------- //
+  // Event in die Eventliste der Tour hinzufügen 
+  // beim Schreiben des Events werden auch die geo-Daten ermittelt!
+  // ------------------------------------------------------------------------------- //
+  static Future<void> appendEvent(
+    Tour tourData, 
+    String event, 
+    {
+      String reason: '', 
+      String info:'', 
+      String dlvno: ''
+      }
+    ) async {
 
     String twoDigits(int n) {
       if (n >= 10) return "$n";
@@ -749,6 +886,7 @@ class Tour {
     eventObj.info = info;
     eventObj.changeKz = 'I';
     eventObj.dateTime = DateTime.now();
+
     if (event == globals.event_tour_continue) {
       if (tourData.syncTime != null && info == '') {
         Duration dauer = eventObj.dateTime.difference(tourData.syncTime);
@@ -762,22 +900,33 @@ class Tour {
         }
       }
     }
+
     if (event == globals.event_tour_start && info == '') {
       String kmStand = Helpers.formatInt(tourData.startKM); //tourData.startKM.toString();
       eventObj.info  = 'km: $kmStand';
     }
+
     if (event == globals.event_tour_ende && info == '') {
       String kmStand = Helpers.formatInt(tourData.endeKM); //tourData.endeKM.toString();
       eventObj.info  = 'km: $kmStand';
     }
+
     eventObj.latitude = globals.passLatitude;
     eventObj.longitude = globals.passLongitude;
     tourData.eventList.add(eventObj);
+
     print("geo-location: "+globals.passLatitude.toString()+" / "+globals.passLongitude.toString());
     
   }
-
-  static _transmitToSAP(Tour tourData, {String dlvno, bool head:false}) async {
+  // ------------------------------------------------------------------------------- //
+  // Übertragung der Daten direkt an SAP per HTTP-Post
+  // ------------------------------------------------------------------------------- //
+  static _transmitToSAP(
+    Tour tourData, 
+    {
+      String dlvno, 
+      bool head:false
+    }) async {
 
     String jsonData  = tourData.toJson(tourData, delta:true, dlvno:dlvno, head:head);
     //print("transmitted to SAP - start : JSON = "+jsonData);
@@ -795,7 +944,9 @@ class Tour {
     }
     print("transmitted to SAP - ende : ReturnCode = "+tourData.returnCode.toString());
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Daten von SAP anfordern 
+  // ------------------------------------------------------------------------------- //
   static Future<Tour> _requestFromSAP(String routno, String drivno) async {
 
     String step = '0'; //next Tour
@@ -811,7 +962,7 @@ class Tour {
     SAP sap = new SAP();
     await sap.requestToSAP("get_next_tour", step, jsonData);
 
-    if( sap.returnCode == 0) {
+    if( sap.returnCode == 0 ) {
       jsonData = sap.returnData;
     } else {
       Tour tourData = new Tour();
@@ -830,10 +981,13 @@ class Tour {
 
     tourData = Tour.fromJson(mapData);
 
-    tourData.returnCode = 0;
+    //tourData.returnCode = 0;
     tourData.returnMssg = sap.returnMssg;
 
-    _saveToFile(tourData);
+    if (tourData.routno != '') {
+      _saveToFile(tourData);
+    }
+
     return tourData;
   }
 }
@@ -923,7 +1077,9 @@ class Delivery {
     this.lgutList,
     this.imageList,
   });
-
+  // ------------------------------------------------------------------------------- //
+  // Lieferdaten aus JSON String aufbauen 
+  // ------------------------------------------------------------------------------- //
   factory Delivery.fromJson(Map<String, dynamic> json) {
     List<DelvItem> itemList = new List<DelvItem>();
     List<Leergut> lgutList = new List<Leergut>();
@@ -999,8 +1155,10 @@ class Delivery {
       closedItems: cntClosed,
     );
   }
-
-  Map<String, dynamic> toJsonMap(Delivery delivery,{bool delta:false}) {
+  // ------------------------------------------------------------------------------- //
+  // Lieferdaten mappen 
+  // ------------------------------------------------------------------------------- //
+  Map<String, dynamic> toJsonMap( Delivery delivery, {bool delta:false} ) {
 
     bool itemChanged = false;
     bool lgutChanged = false;
@@ -1134,8 +1292,11 @@ class Delivery {
 
     return mapData;
   }
+  // ------------------------------------------------------------------------------- //
+  // Lieferdaten als JSON String serialiseren 
+  // ------------------------------------------------------------------------------- //
+  String toJson( Delivery delivery, { bool imageBinary:false } ) {
 
-  String toJson(Delivery delivery,{bool imageBinary:false}) {
     var mapData = toJsonMap(delivery);
     String json = jsonEncode(mapData);
     return json;
@@ -1198,6 +1359,9 @@ class DelvItem {
     this.unitsList,
   });
 
+  // ------------------------------------------------------------------------------- //
+  // Liefer-Positionsdaten aus den JSON Daten aufbauen
+  // ------------------------------------------------------------------------------- //
   factory DelvItem.fromJson(Map<String, dynamic> json) {
     List<Units> unitsList = new List<Units>();
     try {
@@ -1233,8 +1397,10 @@ class DelvItem {
         changeKz: json['changeKz'] == null ? '' : json['changeKz'] as String,
         unitsList: unitsList);
   }
-
-  Map<String, dynamic> toJsonMap(DelvItem delvItem, {bool delta:false}) {
+  // ------------------------------------------------------------------------------- //
+  // Positionsdaten mappen 
+  // ------------------------------------------------------------------------------- //
+  Map<String, dynamic> toJsonMap( DelvItem delvItem, { bool delta:false } ) {
  
     var mapData = new Map<String, dynamic>();
 
@@ -1280,11 +1446,15 @@ class DelvItem {
     }
     return mapData;
   }
+  // ------------------------------------------------------------------------------- //
+  // Positionsdaten serialisieren 
+  // ------------------------------------------------------------------------------- //
+  String toJson( DelvItem delvItem, { bool delta:false } ) {
 
-  String toJson(DelvItem delvItem, {bool delta:false}) {
     String json = '';
     var mapData = toJsonMap(delvItem,delta:delta);
     json = jsonEncode(mapData);
+
     return json;
   }
 }
@@ -1303,7 +1473,11 @@ class Images {
 
   Images ({this.posnr, this.number, this.fileName, this.comment, this.changeKz, this.img64});
 
+  // ------------------------------------------------------------------------------- //
+  // Bilddaten aus den JSON Daten aufbauen (Metadaten)
+  // ------------------------------------------------------------------------------- //
   factory Images.fromJson(Map<String, dynamic> json) {
+
     return new Images(
       posnr:    json['posnr'] as String,
       number:   json['nummer'] as int,        /*   !!   */
@@ -1334,7 +1508,11 @@ class Images {
     }
     return mapData;
   }
+  // ------------------------------------------------------------------------------- //
+  // Bilddaten serialisieren 
+  // ------------------------------------------------------------------------------- //  
   String toJson(Images image, {bool delta:false}) {
+
     var mapData = toJsonMap(image, delta:delta);
     String json = jsonEncode(mapData);
     return json;
@@ -1365,7 +1543,11 @@ class Leergut {
     this.changeKz,
   });
 
+  // ------------------------------------------------------------------------------- //
+  // Leergut-Daten aus den JSON Daten aufbauen
+  // ------------------------------------------------------------------------------- //
   factory Leergut.fromJson(Map<String, dynamic> json) {
+    
     return new Leergut(
       matnr: json['matnr'] as String,
       maktx: json['maktx'] as String,
@@ -1377,8 +1559,10 @@ class Leergut {
       changeKz: json['changeKz'] as String,
     );
   }
-  Map<String, dynamic> toJsonMap(Leergut leergut, {bool delta:false}) {
+  Map<String, dynamic> toJsonMap( Leergut leergut, { bool delta:false } ) {
+
     var mapData = new Map<String, dynamic>();
+
     mapData["matnr"] = leergut.matnr;
     //if (delta == false) {
     mapData["maktx"] = leergut.maktx;
@@ -1391,6 +1575,7 @@ class Leergut {
     mapData["changeKz"] = leergut.changeKz;
     return mapData;
   }
+
   String toJson(Leergut leergut, {bool delta:false}) {
     var mapData = toJsonMap(leergut, delta:delta);
     String json = jsonEncode(mapData);
@@ -1402,6 +1587,7 @@ class Leergut {
 // Class StandardLeergut                                                          */
 /* ****************************************************************************** */
 class StandardLeergut {
+
   String matnr; // Materialnummer
   String maktx; // Materialbezeichnung
   String abmes; // Abmessungen
@@ -1418,7 +1604,11 @@ class StandardLeergut {
     this.meins,
   });
 
+  // ------------------------------------------------------------------------------- //
+  // Standard-Leergut (als Vorlage zur Auswahl)
+  // ------------------------------------------------------------------------------- //
   factory StandardLeergut.fromJson(Map<String, dynamic> json) {
+
     return new StandardLeergut(
       matnr: json['matnr'] as String,
       maktx: json['maktx'] == null ? '' : json['maktx'] as String,
@@ -1452,8 +1642,13 @@ class StandardLeergut {
     return listData;
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Lesen des Standard-Leerguts von SAP
+  // ------------------------------------------------------------------------------- //
   static Future<void> getFromBackend() async {
+
     final List<StandardLeergut> listData = [];
+
     String rawData = '';
     String fileName = 'leergut';
 
@@ -1475,6 +1670,9 @@ class StandardLeergut {
     int result = await Files.writeToFile(fileName, rawData);
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Lesen lokal - für Demo-Tour
+  // ------------------------------------------------------------------------------- //
   static Future<String> _loadAsset() async {
     return await rootBundle.loadString("resources/data/leergut.json");
   }
@@ -1518,7 +1716,7 @@ class Fahrer {
     if (driverMap == null || driverMap.isEmpty) {
       await getFahrerFromFile();
     }
-    if (driverMap != null && driverMap != {}) {
+    if (driverMap != null && driverMap.isNotEmpty) {
       if (nummer != null && nummer != '') {
         name = driverMap[nummer];
       }
@@ -1527,6 +1725,9 @@ class Fahrer {
     return name;
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Lesen der Fahrer-Daten aus der Sicherung (File)
+  // ------------------------------------------------------------------------------- //
   static Future<void> getFahrerFromFile() async {
     final List<Fahrer> listData = [];
 
@@ -1537,6 +1738,9 @@ class Fahrer {
     rawData = await Files.readFromFile(fileName);
 
     // Decode JSON data
+    if (rawData == '') {
+      return listData;
+    }
     final mapData = jsonDecode(rawData);
     Fahrer fahrer;
 
@@ -1550,8 +1754,13 @@ class Fahrer {
     return listData;
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Lesen der Fahrer-Daten vom Backend
+  // ------------------------------------------------------------------------------- //
   static Future<void> getFromBackend() async {
+
     final List<Fahrer> listData = [];
+
     String rawData = '';
     String fileName = 'drivers';
 
@@ -1581,6 +1790,9 @@ class Fahrer {
     drivers.forEach((fahrer) => driverMap[fahrer.nummer] = fahrer.name);
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Lesen der Fahrerdaten für die Demo-Tour
+  // ------------------------------------------------------------------------------- //
   static Future<String> _loadFromAsset() async {
     return await rootBundle.loadString("resources/data/fahrer.json");
   }
@@ -1610,6 +1822,9 @@ class Events {
     this.changeKz
     }); 
 
+  // ------------------------------------------------------------------------------- //
+  // Ereignisse aus den JSON Daten aufbauen
+  // ------------------------------------------------------------------------------- //
   factory Events.fromJson(Map<String, dynamic> json) {
     return new Events(
       event:     json['event']    as String,
@@ -1636,14 +1851,23 @@ class Events {
     };
   }
 
+  // ------------------------------------------------------------------------------- //
+  // Bezeichnung zum Ereignis lesen 
+  // ------------------------------------------------------------------------------- //
   static String getEventDescr(BuildContext context, event) {
     var eventMap = getEvents(context);
     return eventMap[event];
   }
+  // ------------------------------------------------------------------------------- //
+  // Bezeichnung des Unterbrechungsgrundes lesen 
+  // ------------------------------------------------------------------------------- //
   static String getReasonDescr(BuildContext context, reason) {
     var reasonMap = getReasons(context);
     return reasonMap[reason];   
   }
+  // ------------------------------------------------------------------------------- //
+  // Daten für Eregnisse für die Anzeige des Tourverlauf aufbereiten 
+  // ------------------------------------------------------------------------------- //
   static Map<String,String> getEvents(BuildContext context,) {
     String tourLabel  = H.getText(context, 'tour');
     String delvLabel  = H.getText(context, 'delivery');
@@ -1676,11 +1900,15 @@ class Events {
 // Class RequestTour                                                              */
 /* ****************************************************************************** */
 class RequestTour {
+
   String routno; 
   String drivno; 
 
   RequestTour({this.routno, this.drivno});
 
+  // ------------------------------------------------------------------------------- //
+  // Strukturdaten für die Anforderung der Tourdaten vom Backend
+  // ------------------------------------------------------------------------------- //
   factory RequestTour.fromJson(Map<String, dynamic> json) {
     return new RequestTour(
       routno: json['routno'] as String,

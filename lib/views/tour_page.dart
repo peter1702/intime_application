@@ -240,6 +240,10 @@ class _TourListPageState extends State<TourListPage> {
     }
   }
 
+  Future<bool> _exitApp(BuildContext context) {
+    Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     _refreshTour();
@@ -252,7 +256,14 @@ class _TourListPageState extends State<TourListPage> {
         preferredSize: Size.fromHeight(70.0),
         child: AppBar(
           backgroundColor: globals.primaryColor,
-          automaticallyImplyLeading: false, 
+          //automaticallyImplyLeading: false, 
+
+          leading: new IconButton(
+            icon: new Icon(Icons.arrow_back_ios),
+            onPressed: () {
+              _exitApp(context);
+            }),
+
           title: RichText(
             text: TextSpan(children: [
               TextSpan(text: title, style: globals.styleHeaderTitle),

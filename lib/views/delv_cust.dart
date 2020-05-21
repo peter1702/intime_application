@@ -61,6 +61,7 @@ class _DeliveryCustState extends State<DeliveryCust> {
     dlvIndex = widget.dlvIndex;
     delvno   = widget.delvno;
   }
+
   Future<bool> _exitApp(BuildContext context) {
     //print("Exit App -> data changed: " + globals.changeData.toString());
     if (readonly == false && globals.changeData == true) {
@@ -273,9 +274,11 @@ class _DeliveryCustState extends State<DeliveryCust> {
 
     return new WillPopScope(
       onWillPop: () => _exitApp(context),
+
       child: new Scaffold(
-      backgroundColor: Colors.grey[100],
-      key: _scaffoldKey,
+        backgroundColor: Colors.grey[100],
+        key: _scaffoldKey,
+        
       /* ---------- appBar ------------------------------------------------*/
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(70.0),
@@ -330,6 +333,7 @@ class _DeliveryCustState extends State<DeliveryCust> {
               style: TextStyle(color: Colors.orange),
             )),
         )
+        
       : FABBottomAppBar(
           centerItemText: buttonChoice.title,
           color: Colors.grey,

@@ -95,8 +95,8 @@ class _StartPageState extends State<StartPage> {
     return new WillPopScope(
       onWillPop: () => _exitApp(context),
       child: new Scaffold(
-      backgroundColor: Colors.white,
-      key: _scaffoldKey,
+        backgroundColor: Colors.white,
+        key: _scaffoldKey,
 
       appBar: AppBar(
         backgroundColor: globals.primaryColor,
@@ -142,7 +142,7 @@ class _StartPageState extends State<StartPage> {
                             fit: BoxFit.contain),
                     ),
                   ),
-                  globals.demoModus
+                  globals.demoModus || globals.loginName.toLowerCase() == "demo"
                       ? ListTile(
                           title: Text(H.getText(context, 'tour_reset')),
                           trailing: Icon(Icons.navigate_next),
@@ -467,7 +467,6 @@ class _StartPageState extends State<StartPage> {
 
     void _synchronize(BuildContext context) async {
       if (globals.currentTourNo != '' && globals.demoModus == false) {
-        //Tour tourData = Tour.getBuffer(globals.currentTourNo, globals.currentDrivNo);
         Tour tourData = await Tour.readFromFile(globals.currentTourNo, globals.currentDrivNo);
         progressDialog.show();
         await Tour.syncTour(tourData);

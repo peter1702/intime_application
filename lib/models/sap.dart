@@ -11,6 +11,10 @@ class SAP {
 
   SAP({this.returnCode, this.returnMssg, this.returnStatus, this.returnData});
 
+  // ------------------------------------------------------------------------------- //
+  // Prüfen im SAP, ob der Benutzer gültig ist 
+  // In diesem Fall muss es sich um einen 'echten' SAP-User handeln 
+  // ------------------------------------------------------------------------------- //
   Future<void> checkSAPUserLogin (String usr, String pwd) async {
     String json  = '';
     LoginParam parm = new LoginParam();
@@ -21,7 +25,10 @@ class SAP {
 
     await requestToSAP("check_user", "2", json, usr: usr, pwd: pwd);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Prüfen im SAP, ob der Benutzer gültig ist 
+  // Bei "sekundärem" User wird gegen die Tabelle /BUP/MOB_USER geprüft 
+  // ------------------------------------------------------------------------------- //
   Future<void> checkSecUserLogin (String usr, String pwd) async {
     String json  = '';
     LoginParam parm = new LoginParam();
@@ -32,11 +39,20 @@ class SAP {
 
     await requestToSAP("check_user", "1", json);
   }
-
+  // ------------------------------------------------------------------------------- //
+  // Aufruf von SAP 
+  // Der Aufruf kann direkt zum SAP gehen. Dann müssen alle SAP-Anmeldedaten
+  // gefüllt sein. Oder der Aufruf geht zuerst an einen HTTP-Server. Dann muss
+  // der Hostname und der Port des HTTP-Servers gefüllt sein. Die Anmeldedaten 
+  // werden beim HTTP-Server abgelegt. 
+  // Meldet sich der User mit einem "sekundären" User an, ist auch SAP-User und 
+  // SAP-Kennwort auf dem HTTP-Server.  
+  // ------------------------------------------------------------------------------- //
   Future<void> requestToSAP (String action, String step, String json, {String usr, String pwd}) async {
 
     String auth = buildAuthString(user:usr, password:pwd);
     String susr = '';
+    String spwd = '';
     Uri uri = buildURI ();
     int timeOut = 5;
     
@@ -44,6 +60,8 @@ class SAP {
       susr = globals.loginName;
     if (susr == '')
       susr = globals.userName;
+    if (pwd == null || pwd == '')
+      spwd = globals.loginPwd;
 
     final client = new HttpClient();
     if (timeOut != null) {
@@ -56,12 +74,14 @@ class SAP {
       // Build Header
       request.headers.add("Content-Length", body.length);
       request.headers.add("Content-Type", "application/json");
-      if (auth != null && auth.isNotEmpty)
+      if (auth != null && auth.isNotEmpty) {
         request.headers.add("Authorization", "Basic $auth");
+      }
       request.headers.add("Accept-Language", globals.loginLang);
       request.headers.add("Z-ACTION", action);
       request.headers.add("Z-STEP",   step);
       request.headers.add("Z-SUSER",  susr);
+      request.headers.add("Z-SPASS",  spwd);
       request.headers.add("Z-DEVICE", globals.deviceId);
       //request.cookies.addAll(cookie.loadForRequest(uri)); // Must be before filling the body 
       request.add(body);
@@ -146,18 +166,37 @@ class SAP {
       returnCode   = 1;
       returnStatus = '777';
     }
+    if (returnCode != 0) {
+      print("ReturnCode..... "+returnCode.toString());
+      print("ReturnStatus... "+returnStatus);
+      print("ReturnMssg..... "+returnMssg);
+    }
 
   }
-
+  // ------------------------------------------------------------------------------- //
+  // User-Kennung und Passwort in einen String.
+  // Benutzer und Passwort werden abhängig vom Anmeldeverfahren ermittelt. 
+  // Bei einer Anmeldung mit einem "sekundären" Benutzer, wird der SAP-User vom admin
+  // in den Parametern hinterlegt. Bei Nutzung eines HTTP-Servers können die 
+  // Anmeldedaten auch dort zentral hinterlegt werden. 
+  // ------------------------------------------------------------------------------- //
   String buildAuthString ({String user='', String password=''}) {
     String sapAuthString;
     String usr; 
     String pwd;
-    /*
+    
+    if (globals.usrSAP == null) globals.usrSAP = '';
+    if (globals.pwdSAP == null) globals.pwdSAP = '';
+    if (globals.loginSAP == null) globals.loginSAP = false;
+    if (globals.sapAnonym == null) globals.sapAnonym = false;
+    if (globals.loginName == null) globals.loginName = '';
+    if (user == null) user = '';
+    if (password == null) password = '';
+
     print("globals.usrSAP = " +globals.usrSAP);
     print("globals.loginName = " +globals.loginName);
     print("globals.loginSAP = "+ globals.loginSAP.toString());
-    */
+    
     // Prüfen, wie die Anmeldung an SAP erfolgen soll
     if (globals.loginSAP) {
       // der Login-Name entspricht dem SAP-Benutzer
@@ -195,15 +234,31 @@ class SAP {
       // optional könnte man hier noch das Passwort über Dialog abfragen
       sapAuthString = base64Encode(utf8.encode('$usr:$pwd'));
     }
-
-    //print("buildAuthString usr: $usr pwd: $pwd");
+    if (usr == '') {
+      print("buildAuthString usr: $usr pwd: $pwd");
+    }
     return sapAuthString;
   }
-  
+  // ------------------------------------------------------------------------------- //
+  // Bilden der URI
+  // Bei einer Anmeldung am HTTP-Server keinen Service hinterlegen! 
+  // ------------------------------------------------------------------------------- //
   Uri buildURI () {
+
+    if (globals.hostSAP == null) globals.hostSAP = '';
+    if (globals.portSAP == null) globals.portSAP = '';
+    if (globals.serviceSAP == null) globals.serviceSAP = '';
+    if (globals.clientSAP == null) globals.clientSAP = '';
+
+    globals.hostSAP = globals.hostSAP.trim();
+    globals.serviceSAP = globals.serviceSAP.trim();
+
     String url = globals.hostSAP +
         ":" +
-        globals.portSAP +
+        globals.portSAP; 
+
+    if (globals.serviceSAP != null && globals.serviceSAP != '') {
+      url = url +
         "/" +
         globals.serviceSAP +
         "?" +
@@ -212,13 +267,16 @@ class SAP {
         "&" +
         "sap-language=" +
         globals.loginLang;
+    }
+    //print("url: "+url);
 
-    //Uri  uri  = Uri.parse('http://52.16.21.175:50000/sap/bc/zjsonconnect?sap-client=100');
     return Uri.parse(url);
   }
 
 }
-
+// ------------------------------------------------------------------------------- //
+// Struktur für die Login-Parameter 
+// ------------------------------------------------------------------------------- //
 class LoginParam {
   String username; 
   String password; 
@@ -239,7 +297,9 @@ class LoginParam {
     };
   }
 }
-
+// ------------------------------------------------------------------------------- //
+// Struktur für die zurückgegebenen User-Daten aus SAP 
+// ------------------------------------------------------------------------------- //
 class UserParam {
   String username; 
   String password; 

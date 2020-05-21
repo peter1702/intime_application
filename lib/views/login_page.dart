@@ -34,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
   String userPassword = ''; //letztes verifiziertes Passwort
   String passKey = ''; //Preference-Key für userPassword
   String error_message;
+  bool refreshPassword = false;
 
   bool _login_with_sap = false;
   bool _login_with_sec = false;
@@ -54,18 +55,17 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    passController.text = '';
   }
 
   @override
   Widget build(BuildContext context) {
     _loadPreferences();
+    _refresh();
     
     return Scaffold(
       appBar: AppBar(
         backgroundColor: globals.primaryColor,
-        //title: Text(H.getText(context, 'login')),
-        //title: //Text(H.getText(context, 'main_title')),
+        //title: Text(H.getText(context, 'main_title')),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -208,10 +208,12 @@ class _LoginPageState extends State<LoginPage> {
   /*-----------------------------------------------------------------------------------*/
   // Login 
   /*-----------------------------------------------------------------------------------*/
-  _login(BuildContext context, {bool nocheck = false}) async {
+  _login(BuildContext context, {bool nocheck: false}) async {
+
     if (!nocheck) {
       await _checkCredentials(context);
     }
+
     if (!usr_invalid && !pwd_invalid && !abbruch) {
       setState(() {
         if (prefs != null) {
@@ -251,6 +253,7 @@ class _LoginPageState extends State<LoginPage> {
           globals.loginName.toLowerCase() == 'admin1' ) {
         String menue = 'LVS';
         String myTitle = 'Warehouse-Management';
+        refreshPassword = true;
        // Navigator.pushReplacement(
         Navigator.push(
             context,
@@ -263,9 +266,20 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
   /*-----------------------------------------------------------------------------------*/
+  // Bei Wiedereinstieg Passwort zurücksetzen 
+  /*-----------------------------------------------------------------------------------*/
+  _refresh() {
+    if (refreshPassword == true) {
+      refreshPassword = false;
+      passController.clear();
+      FocusScope.of(context).requestFocus(passFocus);
+    }
+  }
+  /*-----------------------------------------------------------------------------------*/
   // Prüfen Benutzer & Kennwort
   /*-----------------------------------------------------------------------------------*/
   _checkCredentials(BuildContext context) async {
+
     String usr;
     String pwd;
     bool checkLastUser = false;
@@ -532,7 +546,9 @@ class _LoginPageState extends State<LoginPage> {
   // Preferences lesen 
   /*-----------------------------------------------------------------------------------*/
   _loadPreferences() async {
+  
     prefs = await SharedPreferences.getInstance();
+
     if (!initialized) {
       initialized = true;
       setState(
@@ -594,6 +610,7 @@ class PasswordDialog extends StatefulWidget {
 }
 
 class _PasswordDialogState extends State<PasswordDialog> {
+
   String _title;
   String _oldPassword;
   bool _pwdInit;
@@ -601,9 +618,11 @@ class _PasswordDialogState extends State<PasswordDialog> {
   TextEditingController pwd0Controller = TextEditingController();
   TextEditingController pwd1Controller = TextEditingController();
   TextEditingController pwd2Controller = TextEditingController();
+
   FocusNode pwd0Focus = FocusNode();
   FocusNode pwd1Focus = FocusNode();
   FocusNode pwd2Focus = FocusNode();
+
   bool pwd0_invalid = false;
   bool pwd1_invalid = false;
   bool pwd2_invalid = false;

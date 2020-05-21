@@ -25,7 +25,11 @@ class _MenuPageState extends State<MenuPage> {
   int maxPages = 3;
   int maxItems = 6;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   PageController controller = PageController();
+  static const _kDuration = const Duration(milliseconds: 300);
+  static const _kCurve = Curves.ease;
   var currentPageValue = 0.0;
   final pageIndexNotifier = ValueNotifier<int>(0);
 
@@ -87,6 +91,8 @@ class _MenuPageState extends State<MenuPage> {
     return new WillPopScope(
       onWillPop: () => _exitApp(context),
       child: new Scaffold(
+        key: _scaffoldKey,
+
       appBar: AppBar(
         iconTheme: IconThemeData(
           color: Colors.blue,
@@ -109,11 +115,13 @@ class _MenuPageState extends State<MenuPage> {
         ),
 
         backgroundColor: Colors.white,
+
         leading: new IconButton(
-            icon: new Icon(Icons.arrow_back, color: globals.primaryColor),
+            icon: new Icon(Icons.arrow_back_ios, color: globals.primaryColor),
             onPressed: () {
-              Navigator.pop(context, true); // back
+              _exitApp(context);
             }),
+
         actions: <Widget>[
           new IconButton(
               icon: new Icon(Icons.more_vert, color: globals.primaryColor),
@@ -163,11 +171,34 @@ class _MenuPageState extends State<MenuPage> {
                         }
                       }),
                     );
-                  },),);
+                  },),
+              );
             }),
 
         //PageViewIndicator
-        _buildPageViewIndicator(),
+
+        Stack(
+          alignment: AlignmentDirectional.bottomCenter,  //.topStart,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(bottom: 8),
+              child:
+              _buildPageViewIndicator(),
+            ),
+            Container(
+              //margin: EdgeInsets.only(bottom: 35),
+              child: Row(
+                //mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  new IconButton(icon: new Icon(Icons.keyboard_arrow_left, color:globals.primaryColor), 
+                      onPressed: () { controller.previousPage(duration: _kDuration, curve: _kCurve);} ),
+                  new IconButton(icon: new Icon(Icons.keyboard_arrow_right, color:globals.primaryColor), 
+                      onPressed: () { controller.nextPage(duration: _kDuration, curve: _kCurve); } ),
+              ]),
+            ),
+          ]),
+
       ]),
     ));
   }
